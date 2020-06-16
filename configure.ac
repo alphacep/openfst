@@ -180,7 +180,8 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([
               [AC_MSG_FAILURE(m4_normalize([
                    Test float equality failed!
                    Compile with -msse -mfpmath=sse if using g++.
-              ]))])
+              ]))],
+              [echo "Ignoring test for cross-compilation"])
 
 AC_CHECK_LIB([dl], dlopen, [DL_LIBS=-ldl])
 AC_SUBST([DL_LIBS])
