@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -16,36 +30,26 @@ namespace fst {
 
 namespace script {
 
-FarType GetFarType(const std::string &str) {
+bool GetFarType(const std::string &str, FarType *far_type) {
   if (str == "fst") {
-    return FAR_FST;
+    *far_type = FarType::FST;
   } else if (str == "stlist") {
-    return FAR_STLIST;
+    *far_type = FarType::STLIST;
   } else if (str == "sttable") {
-    return FAR_STTABLE;
-  } else {
-    return FAR_DEFAULT;
-  }
-}
-
-bool GetFarEntryType(const std::string &str, FarEntryType *entry_type) {
-  if (str == "line") {
-    *entry_type = FET_LINE;
-  } else if (str == "file") {
-    *entry_type = FET_FILE;
+    *far_type = FarType::STTABLE;
+  } else if (str == "default") {
+    *far_type = FarType::DEFAULT;
   } else {
     return false;
   }
   return true;
 }
 
-bool GetFarTokenType(const std::string &str, FarTokenType *token_type) {
-  if (str == "symbol") {
-    *token_type = FTT_SYMBOL;
-  } else if (str == "byte") {
-    *token_type = FTT_BYTE;
-  } else if (str == "utf8") {
-    *token_type = FTT_UTF8;
+bool GetFarEntryType(const std::string &str, FarEntryType *entry_type) {
+  if (str == "line") {
+    *entry_type = FarEntryType::LINE;
+  } else if (str == "file") {
+    *entry_type = FarEntryType::FILE;
   } else {
     return false;
   }
@@ -57,15 +61,15 @@ void ExpandArgs(int argc, char **argv, int *argcp, char ***argvp) {
 
 }  // namespace script
 
-std::string GetFarTypeString(FarType type) {
-  switch (type) {
-    case FAR_FST:
+std::string GetFarTypeString(FarType far_type) {
+  switch (far_type) {
+    case FarType::FST:
       return "fst";
-    case FAR_STLIST:
+    case FarType::STLIST:
       return "stlist";
-    case FAR_STTABLE:
+    case FarType::STTABLE:
       return "sttable";
-    case FAR_DEFAULT:
+    case FarType::DEFAULT:
       return "default";
     default:
       return "<unknown>";

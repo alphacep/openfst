@@ -1,8 +1,22 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
 // NgramFst implements a n-gram language model based upon the LOUDS data
-// structure.  Please refer to "Unary Data Structures for Language Models"
+// structure. Please refer to "Unary Data Structures for Language Models"
 // http://research.google.com/pubs/archive/37218.pdf
 
 #ifndef FST_EXTENSIONS_NGRAM_NGRAM_FST_H_
@@ -96,8 +110,7 @@ class NGramFstImpl : public FstImpl<A> {
     }
   }
 
-  static NGramFstImpl<A> *Read(std::istream &strm,  // NOLINT
-                               const FstReadOptions &opts) {
+  static NGramFstImpl<A> *Read(std::istream &strm, const FstReadOptions &opts) {
     auto impl = fst::make_unique<NGramFstImpl<A>>();
     FstHeader hdr;
     if (!impl->ReadHeader(strm, opts, kMinFileVersion, &hdr)) return nullptr;
@@ -123,8 +136,7 @@ class NGramFstImpl : public FstImpl<A> {
     return impl.release();
   }
 
-  bool Write(std::ostream &strm,  // NOLINT
-             const FstWriteOptions &opts) const {
+  bool Write(std::ostream &strm, const FstWriteOptions &opts) const {
     FstHeader hdr;
     hdr.SetStart(Start());
     hdr.SetNumStates(num_states_);
@@ -244,15 +256,15 @@ class NGramFstImpl : public FstImpl<A> {
   StateId Transition(const std::vector<Label> &context, Label future) const;
 
   // Properties always true for this Fst class.
-  static const uint64 kStaticProperties =
+  static constexpr uint64 kStaticProperties =
       kAcceptor | kIDeterministic | kODeterministic | kEpsilons | kIEpsilons |
       kOEpsilons | kILabelSorted | kOLabelSorted | kWeighted | kCyclic |
       kInitialAcyclic | kNotTopSorted | kAccessible | kCoAccessible |
       kNotString | kExpanded;
   // Current file format version.
-  static const int kFileVersion = 4;
+  static constexpr int kFileVersion = 4;
   // Minimum file format version supported.
-  static const int kMinFileVersion = 4;
+  static constexpr int kMinFileVersion = 4;
 
   std::unique_ptr<MappedFile> data_region_;
   const char *data_ = nullptr;
@@ -272,8 +284,12 @@ class NGramFstImpl : public FstImpl<A> {
   const Weight *backoff_ = nullptr;
   const Weight *final_probs_ = nullptr;
   const Weight *future_probs_ = nullptr;
+  // Uses all operations.
   BitmapIndex context_index_;
+  // Uses Select0 and Rank1.
   BitmapIndex future_index_;
+  // Uses Get and Rank1. This wastes space if there are no or few final
+  // states, but it's also small. TODO(jrosenstock): Look at EliasFanoArray.
   BitmapIndex final_index_;
 };
 
@@ -464,7 +480,7 @@ inline void NGramFst<A>::InitArcIterator(StateId s,
                                          ArcIteratorData<A> *data) const {
   GetImpl()->SetInstFuture(s, &inst_);
   GetImpl()->SetInstNode(&inst_);
-  data->base = new ArcIterator<NGramFst<A>>(*this, s);
+  data->base = fst::make_unique<ArcIterator<NGramFst<A>>>(*this, s);
 }
 
 namespace internal {
@@ -731,8 +747,12 @@ inline void NGramFstImpl<A>::Init(const char *data, bool owned,
   offset += num_final_ * sizeof(*final_probs_);
   future_probs_ = reinterpret_cast<const Weight *>(data_ + offset);
 
-  context_index_.BuildIndex(context_, context_bits);
-  future_index_.BuildIndex(future_, future_bits);
+  context_index_.BuildIndex(context_, context_bits,
+                            /*enable_select_0_index=*/true,
+                            /*enable_select_1_index=*/true);
+  future_index_.BuildIndex(future_, future_bits,
+                           /*enable_select_0_index=*/true,
+                           /*enable_select_1_index=*/false);
   final_index_.BuildIndex(final_, num_states_);
 
   select_root_ = context_index_.Select0s(0);

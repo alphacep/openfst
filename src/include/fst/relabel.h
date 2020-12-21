@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -16,7 +30,6 @@
 
 #include <fst/cache.h>
 #include <fst/test-properties.h>
-
 
 #include <unordered_map>
 
@@ -45,6 +58,10 @@ void Relabel(
     for (MutableArcIterator<MutableFst<Arc>> aiter(fst, siter.Value());
          !aiter.Done(); aiter.Next()) {
       auto arc = aiter.Value();
+      // dense_hash_map does not support find on the empty_key_val.
+      // These labels should never be in an FST anyway.
+      DCHECK_NE(arc.ilabel, kNoLabel);
+      DCHECK_NE(arc.olabel, kNoLabel);
       // Relabels input.
       auto it = input_map.find(arc.ilabel);
       if (it != input_map.end()) {
@@ -165,13 +182,10 @@ void Relabel(MutableFst<Arc> *fst, const SymbolTable *old_isymbols,
              const SymbolTable *new_isymbols, bool attach_new_isymbols,
              const SymbolTable *old_osymbols, const SymbolTable *new_osymbols,
              bool attach_new_osymbols) {
-  Relabel(fst,
-          old_isymbols, new_isymbols, "" /* no unknown isymbol */,
-          attach_new_isymbols,
-          old_osymbols, new_osymbols, "" /* no unknown ioymbol */,
-          attach_new_osymbols);
+  Relabel(fst, old_isymbols, new_isymbols, "" /* no unknown isymbol */,
+          attach_new_isymbols, old_osymbols, new_osymbols,
+          "" /* no unknown ioymbol */, attach_new_osymbols);
 }
-
 
 // Relabels either the input labels or output labels. The old to
 // new labels are specified using symbol tables. Any label associations not
@@ -234,12 +248,10 @@ class RelabelFstImpl : public CacheImpl<Arc> {
     SetType("relabel");
   }
 
-  RelabelFstImpl(const Fst<Arc> &fst,
-                 const SymbolTable *old_isymbols,
+  RelabelFstImpl(const Fst<Arc> &fst, const SymbolTable *old_isymbols,
                  const SymbolTable *new_isymbols,
                  const SymbolTable *old_osymbols,
-                 const SymbolTable *new_osymbols,
-                 const RelabelFstOptions &opts)
+                 const SymbolTable *new_osymbols, const RelabelFstOptions &opts)
       : CacheImpl<Arc>(opts),
         fst_(fst.Copy()),
         relabel_input_(false),
@@ -434,7 +446,7 @@ class StateIterator<RelabelFst<Arc>> : public StateIteratorBase<Arc> {
   }
 
  private:
-  const internal::RelabelFstImpl<Arc>* impl_;
+  const internal::RelabelFstImpl<Arc> *impl_;
   StateIterator<Fst<Arc>> siter_;
   StateId s_;
 
@@ -457,7 +469,7 @@ class ArcIterator<RelabelFst<Arc>> : public CacheArcIterator<RelabelFst<Arc>> {
 template <class Arc>
 inline void RelabelFst<Arc>::InitStateIterator(
     StateIteratorData<Arc> *data) const {
-  data->base = new StateIterator<RelabelFst<Arc>>(*this);
+  data->base = fst::make_unique<StateIterator<RelabelFst<Arc>>>(*this);
 }
 
 // Useful alias when using StdArc.

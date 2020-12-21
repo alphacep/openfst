@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -83,9 +97,7 @@ void DenseSymbolMap::RemoveSymbol(size_t idx) {
   Rehash(buckets_.size());
 }
 
-void DenseSymbolMap::ShrinkToFit() {
-  symbols_.shrink_to_fit();
-}
+void DenseSymbolMap::ShrinkToFit() { symbols_.shrink_to_fit(); }
 
 void MutableSymbolTableImpl::AddTable(const SymbolTable &table) {
   for (const auto &item : table) {
@@ -122,13 +134,13 @@ void ConstSymbolTableImpl::AddTable(const SymbolTable &table) {
 SymbolTableImpl *SymbolTableImpl::ReadText(std::istream &strm,
                                            const std::string &source,
                                            const SymbolTableTextOptions &opts) {
-  std::unique_ptr<SymbolTableImpl> impl(new SymbolTableImpl(source));
+  auto impl = fst::make_unique<SymbolTableImpl>(source);
   int64 nline = 0;
   char line[kLineLen];
+  const auto separator = opts.fst_field_separator + "\n";
   while (!strm.getline(line, kLineLen).fail()) {
     ++nline;
     std::vector<char *> col;
-    const auto separator = opts.fst_field_separator + "\n";
     SplitString(line, separator.c_str(), &col, true);
     if (col.empty()) continue;  // Empty line.
     if (col.size() != 2) {
@@ -142,7 +154,7 @@ SymbolTableImpl *SymbolTableImpl::ReadText(std::istream &strm,
     const char *value = col[1];
     char *p;
     const auto key = strtoll(value, &p, 10);
-    if (p < value + strlen(value) || (!opts.allow_negative_labels && key < 0) ||
+    if (*p != '\0' || (!opts.allow_negative_labels && key < 0) ||
         key == kNoSymbol) {
       LOG(ERROR) << "SymbolTable::ReadText: Bad non-negative integer \""
                  << value << "\", "
@@ -279,7 +291,7 @@ SymbolTableImpl *SymbolTableImpl::Read(std::istream &strm,
   }
   std::string name;
   ReadType(strm, &name);
-  std::unique_ptr<SymbolTableImpl> impl(new SymbolTableImpl(name));
+  auto impl = fst::make_unique<SymbolTableImpl>(name);
   ReadType(strm, &impl->available_key_);
   int64 size;
   ReadType(strm, &size);
@@ -325,9 +337,7 @@ bool SymbolTableImpl::Write(std::ostream &strm) const {
   return true;
 }
 
-void SymbolTableImpl::ShrinkToFit() {
-  symbols_.ShrinkToFit();
-}
+void SymbolTableImpl::ShrinkToFit() { symbols_.ShrinkToFit(); }
 
 }  // namespace internal
 

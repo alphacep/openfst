@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 
@@ -7,8 +21,10 @@
 #include <tuple>
 #include <vector>
 
+#include <fst/types.h>
 #include <fst/queue.h>
 #include <fst/shortest-distance.h>
+#include <fst/script/arg-packs.h>
 #include <fst/script/fst-class.h>
 #include <fst/script/prune.h>
 #include <fst/script/script-impl.h>
@@ -17,11 +33,11 @@
 namespace fst {
 namespace script {
 
-enum ArcFilterType {
-  ANY_ARC_FILTER,
-  EPSILON_ARC_FILTER,
-  INPUT_EPSILON_ARC_FILTER,
-  OUTPUT_EPSILON_ARC_FILTER
+enum class ArcFilterType : uint8 {
+  ANY,
+  EPSILON,
+  INPUT_EPSILON,
+  OUTPUT_EPSILON
 };
 
 struct ShortestDistanceOptions {
@@ -105,27 +121,28 @@ void ShortestDistance(const Fst<Arc> &fst,
                       std::vector<typename Arc::Weight> *distance,
                       const ShortestDistanceOptions &opts) {
   switch (opts.arc_filter_type) {
-    case ANY_ARC_FILTER: {
+    case ArcFilterType::ANY: {
       ShortestDistance<Arc, Queue, AnyArcFilter<Arc>>(fst, distance, opts);
       return;
     }
-    case EPSILON_ARC_FILTER: {
+    case ArcFilterType::EPSILON: {
       ShortestDistance<Arc, Queue, EpsilonArcFilter<Arc>>(fst, distance, opts);
       return;
     }
-    case INPUT_EPSILON_ARC_FILTER: {
+    case ArcFilterType::INPUT_EPSILON: {
       ShortestDistance<Arc, Queue, InputEpsilonArcFilter<Arc>>(fst, distance,
                                                                opts);
       return;
     }
-    case OUTPUT_EPSILON_ARC_FILTER: {
+    case ArcFilterType::OUTPUT_EPSILON: {
       ShortestDistance<Arc, Queue, OutputEpsilonArcFilter<Arc>>(fst, distance,
                                                                 opts);
       return;
     }
     default: {
       FSTERROR() << "ShortestDistance: Unknown arc filter type: "
-                 << opts.arc_filter_type;
+                 << static_cast<std::underlying_type<ArcFilterType>::type>(
+                        opts.arc_filter_type);
       distance->clear();
       distance->resize(1, Arc::Weight::NoWeight());
       return;
@@ -163,9 +180,14 @@ void ShortestDistance(ShortestDistanceArgs1 *args) {
       break;
     }
     case SHORTEST_FIRST_QUEUE: {
-      internal::ShortestDistance<Arc,
-                                 NaturalShortestFirstQueue<StateId, Weight>>(
-          fst, &typed_distance, opts);
+      if constexpr (IsIdempotent<Weight>::value) {
+        internal::ShortestDistance<Arc,
+                                   NaturalShortestFirstQueue<StateId, Weight>>(
+            fst, &typed_distance, opts);
+      } else {
+        FSTERROR() << "ShortestDistance: Bad queue type SHORTEST_FIRST_QUEUE"
+                   << " for non-idempotent Weight " << Weight::Type();
+      }
       break;
     }
     case STATE_ORDER_QUEUE: {
@@ -201,12 +223,26 @@ void ShortestDistance(ShortestDistanceArgs2 *args) {
   internal::CopyWeights(typed_distance, std::get<1>(*args));
 }
 
+using ShortestDistanceInnerArgs3 = std::tuple<const FstClass &, double>;
+
+using ShortestDistanceArgs3 =
+    WithReturnValue<WeightClass, ShortestDistanceInnerArgs3>;
+
+template <class Arc>
+void ShortestDistance(ShortestDistanceArgs3 *args) {
+  const Fst<Arc> &fst = *std::get<0>(args->args).GetFst<Arc>();
+  args->retval = WeightClass(ShortestDistance(fst, std::get<1>(args->args)));
+}
+
 void ShortestDistance(const FstClass &fst, std::vector<WeightClass> *distance,
                       const ShortestDistanceOptions &opts);
 
 void ShortestDistance(const FstClass &ifst, std::vector<WeightClass> *distance,
                       bool reverse = false,
                       double delta = fst::kShortestDelta);
+
+WeightClass ShortestDistance(const FstClass &ifst,
+                             double delta = fst::kShortestDelta);
 
 }  // namespace script
 }  // namespace fst

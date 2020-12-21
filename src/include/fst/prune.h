@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -123,9 +137,9 @@ void Prune(MutableFst<Arc> *fst, const PruneOptions<Arc, ArcFilter> &opts =
   dead.push_back(fst->AddState());
   NaturalLess<Weight> less;
   auto s = fst->Start();
-  const auto limit = opts.threshold_initial ?
-      Times(opts.weight_threshold, (*fdistance)[s]) :
-      Times((*fdistance)[s], opts.weight_threshold);
+  const auto limit = opts.threshold_initial
+                         ? Times(opts.weight_threshold, (*fdistance)[s])
+                         : Times((*fdistance)[s], opts.weight_threshold);
   StateId num_visited = 0;
 
   if (!less(limit, (*fdistance)[s])) {
@@ -145,9 +159,10 @@ void Prune(MutableFst<Arc> *fst, const PruneOptions<Arc, ArcFilter> &opts =
          aiter.Next()) {
       auto arc = aiter.Value();  // Copy intended.
       if (!opts.filter(arc)) continue;
-      const auto weight = Times(Times(idistance[s], arc.weight),
-                                arc.nextstate < fdistance->size() ?
-                                (*fdistance)[arc.nextstate] : Weight::Zero());
+      const auto weight =
+          Times(Times(idistance[s], arc.weight),
+                arc.nextstate < fdistance->size() ? (*fdistance)[arc.nextstate]
+                                                  : Weight::Zero());
       if (less(limit, weight)) {
         arc.nextstate = dead[0];
         aiter.SetValue(arc);
@@ -211,7 +226,7 @@ void Prune(MutableFst<Arc> *fst, typename Arc::Weight weight_threshold,
 // shortest path Times() the provided weight threshold. When the state
 // threshold is not kNoStateId, the output FST is further restricted
 // to have no more than the number of states in
-// opts.state_threshold. Weights have the path property.  The weight
+// opts.state_threshold. Weights have the path property. The weight
 // of any cycle needs to be bounded; i.e.,
 //
 //   Plus(weight, Weight::One()) == Weight::One()
@@ -247,9 +262,9 @@ void Prune(
   std::vector<size_t> enqueued;
   std::vector<bool> visited;
   auto s = ifst.Start();
-  const auto limit = opts.threshold_initial ?
-      Times(opts.weight_threshold, (*fdistance)[s]) :
-      Times((*fdistance)[s], opts.weight_threshold);
+  const auto limit = opts.threshold_initial
+                         ? Times(opts.weight_threshold, (*fdistance)[s])
+                         : Times((*fdistance)[s], opts.weight_threshold);
   while (copy.size() <= s) copy.push_back(kNoStateId);
   copy[s] = ofst->AddState();
   ofst->SetStart(copy[s]);
@@ -271,9 +286,10 @@ void Prune(
     for (ArcIterator<Fst<Arc>> aiter(ifst, s); !aiter.Done(); aiter.Next()) {
       const auto &arc = aiter.Value();
       if (!opts.filter(arc)) continue;
-      const auto weight = Times(Times(idistance[s], arc.weight),
-                                arc.nextstate < fdistance->size() ?
-                                (*fdistance)[arc.nextstate] : Weight::Zero());
+      const auto weight =
+          Times(Times(idistance[s], arc.weight),
+                arc.nextstate < fdistance->size() ? (*fdistance)[arc.nextstate]
+                                                  : Weight::Zero());
       if (less(limit, weight)) continue;
       if ((opts.state_threshold != kNoStateId) &&
           (ofst->NumStates() >= opts.state_threshold)) {

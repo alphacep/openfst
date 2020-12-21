@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -11,11 +25,14 @@
 #include <fst/arc-map.h>
 #include <fst/mutable-fst.h>
 
-
 namespace fst {
 
 // This specifies whether to project on input or output.
-enum ProjectType { PROJECT_INPUT = 1, PROJECT_OUTPUT = 2 };
+enum class ProjectType { INPUT = 1, OUTPUT = 2 };
+OPENFST_DEPRECATED("Use `ProjectType::INPUT` instead.")
+static constexpr ProjectType PROJECT_INPUT = ProjectType::INPUT;
+OPENFST_DEPRECATED("Use `ProjectType::OUTPUT` instead.")
+static constexpr ProjectType PROJECT_OUTPUT = ProjectType::OUTPUT;
 
 // Mapper to implement projection per arc.
 template <class A>
@@ -28,26 +45,25 @@ class ProjectMapper {
       : project_type_(project_type) {}
 
   ToArc operator()(const FromArc &arc) const {
-    const auto label = project_type_ == PROJECT_INPUT ? arc.ilabel : arc.olabel;
+    const auto label =
+        project_type_ == ProjectType::INPUT ? arc.ilabel : arc.olabel;
     return ToArc(label, label, arc.weight, arc.nextstate);
   }
 
-  constexpr MapFinalAction FinalAction() const {
-    return MAP_NO_SUPERFINAL;
-  }
+  constexpr MapFinalAction FinalAction() const { return MAP_NO_SUPERFINAL; }
 
   constexpr MapSymbolsAction InputSymbolsAction() const {
-    return project_type_ == PROJECT_INPUT ? MAP_COPY_SYMBOLS
-                                          : MAP_CLEAR_SYMBOLS;
+    return project_type_ == ProjectType::INPUT ? MAP_COPY_SYMBOLS
+                                               : MAP_CLEAR_SYMBOLS;
   }
 
   constexpr MapSymbolsAction OutputSymbolsAction() const {
-    return project_type_ == PROJECT_OUTPUT ? MAP_COPY_SYMBOLS
-                                           : MAP_CLEAR_SYMBOLS;
+    return project_type_ == ProjectType::OUTPUT ? MAP_COPY_SYMBOLS
+                                                : MAP_CLEAR_SYMBOLS;
   }
 
   constexpr uint64 Properties(uint64 props) const {
-    return ProjectProperties(props, project_type_ == PROJECT_INPUT);
+    return ProjectProperties(props, project_type_ == ProjectType::INPUT);
   }
 
  private:
@@ -68,10 +84,10 @@ inline void Project(const Fst<Arc> &ifst, MutableFst<Arc> *ofst,
                     ProjectType project_type) {
   ArcMap(ifst, ofst, ProjectMapper<Arc>(project_type));
   switch (project_type) {
-    case PROJECT_INPUT:
+    case ProjectType::INPUT:
       ofst->SetOutputSymbols(ifst.InputSymbols());
       return;
-    case PROJECT_OUTPUT:
+    case ProjectType::OUTPUT:
       ofst->SetInputSymbols(ifst.OutputSymbols());
       return;
   }
@@ -82,10 +98,10 @@ template <class Arc>
 inline void Project(MutableFst<Arc> *fst, ProjectType project_type) {
   ArcMap(fst, ProjectMapper<Arc>(project_type));
   switch (project_type) {
-    case PROJECT_INPUT:
+    case ProjectType::INPUT:
       fst->SetOutputSymbols(fst->InputSymbols());
       return;
-    case PROJECT_OUTPUT:
+    case ProjectType::OUTPUT:
       fst->SetInputSymbols(fst->OutputSymbols());
       return;
   }
@@ -112,10 +128,10 @@ class ProjectFst : public ArcMapFst<A, A, ProjectMapper<A>> {
 
   ProjectFst(const Fst<A> &fst, ProjectType project_type)
       : ArcMapFst<A, A, ProjectMapper<A>>(fst, ProjectMapper<A>(project_type)) {
-    if (project_type == PROJECT_INPUT) {
+    if (project_type == ProjectType::INPUT) {
       GetMutableImpl()->SetOutputSymbols(fst.InputSymbols());
     }
-    if (project_type == PROJECT_OUTPUT) {
+    if (project_type == ProjectType::OUTPUT) {
       GetMutableImpl()->SetInputSymbols(fst.OutputSymbols());
     }
   }

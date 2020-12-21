@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -104,8 +118,7 @@ class AllFstOperationsRegisterer {
     REGISTER_FST_OPERATION(EpsNormalize, Arc, EpsNormalizeArgs);
     REGISTER_FST_OPERATION(Equal, Arc, EqualArgs);
     REGISTER_FST_OPERATION(Equivalent, Arc, EquivalentArgs);
-    REGISTER_FST_OPERATION(InitArcIteratorClass, Arc,
-                           InitArcIteratorClassArgs);
+    REGISTER_FST_OPERATION(InitArcIteratorClass, Arc, InitArcIteratorClassArgs);
     REGISTER_FST_OPERATION(InitMutableArcIteratorClass, Arc,
                            InitMutableArcIteratorClassArgs);
     REGISTER_FST_OPERATION(InitStateIteratorClass, Arc,
@@ -135,6 +148,7 @@ class AllFstOperationsRegisterer {
     REGISTER_FST_OPERATION(RmEpsilon, Arc, RmEpsilonArgs);
     REGISTER_FST_OPERATION(ShortestDistance, Arc, ShortestDistanceArgs1);
     REGISTER_FST_OPERATION(ShortestDistance, Arc, ShortestDistanceArgs2);
+    REGISTER_FST_OPERATION(ShortestDistance, Arc, ShortestDistanceArgs3);
     REGISTER_FST_OPERATION(ShortestPath, Arc, ShortestPathArgs);
     REGISTER_FST_OPERATION(Synchronize, Arc, SynchronizeArgs);
     REGISTER_FST_OPERATION(TopSort, Arc, TopSortArgs);

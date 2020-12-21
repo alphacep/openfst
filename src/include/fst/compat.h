@@ -46,8 +46,14 @@ void FailedNewHandler();
 namespace fst {
 
 // Downcasting.
+
 template <typename To, typename From>
 inline To down_cast(From *f) {
+  return static_cast<To>(f);
+}
+
+template <typename To, typename From>
+inline To down_cast(From &f) {
   return static_cast<To>(f);
 }
 
@@ -59,6 +65,23 @@ inline Dest bit_cast(const Source &source) {
   Dest dest;
   memcpy(&dest, &source, sizeof(dest));
   return dest;
+}
+
+namespace internal {
+
+template <typename T>
+struct identity {
+  typedef T type;
+};
+
+template <typename T>
+using identity_t = typename identity<T>::type;
+
+}  // namespace internal
+
+template <typename To>
+constexpr To implicit_cast(typename internal::identity_t<To> to) {
+  return to;
 }
 
 // Checksums.
@@ -111,6 +134,40 @@ std::unique_ptr<T[]> make_unique_default_init(size_t n) {
 template <typename T>
 std::unique_ptr<T> WrapUnique(T *ptr) {
   return std::unique_ptr<T>(ptr);
+}
+
+// Range utilities
+
+// A range adaptor for a pair of iterators.
+//
+// This just wraps two iterators into a range-compatible interface. Nothing
+// fancy at all.
+template <typename IteratorT>
+class iterator_range {
+ public:
+  using iterator = IteratorT;
+  using const_iterator = IteratorT;
+  using value_type = typename std::iterator_traits<IteratorT>::value_type;
+
+  iterator_range() : begin_iterator_(), end_iterator_() {}
+  iterator_range(IteratorT begin_iterator, IteratorT end_iterator)
+      : begin_iterator_(std::move(begin_iterator)),
+        end_iterator_(std::move(end_iterator)) {}
+
+  IteratorT begin() const { return begin_iterator_; }
+  IteratorT end() const { return end_iterator_; }
+
+ private:
+  IteratorT begin_iterator_, end_iterator_;
+};
+
+// Convenience function for iterating over sub-ranges.
+//
+// This provides a bit of syntactic sugar to make using sub-ranges
+// in for loops a bit easier. Analogous to std::make_pair().
+template <typename T>
+iterator_range<T> make_range(T x, T y) {
+  return iterator_range<T>(std::move(x), std::move(y));
 }
 
 // String munging.

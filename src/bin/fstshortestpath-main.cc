@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -22,9 +36,10 @@ DECLARE_string(weight);
 
 int fstshortestpath_main(int argc, char **argv) {
   namespace s = fst::script;
+  using fst::QueueType;
   using fst::script::FstClass;
-  using fst::script::WeightClass;
   using fst::script::VectorFstClass;
+  using fst::script::WeightClass;
 
   std::string usage = "Finds shortest path(s) in an FST.\n\n  Usage: ";
   usage += argv[0];
@@ -46,20 +61,22 @@ int fstshortestpath_main(int argc, char **argv) {
   if (!ifst) return 1;
 
   const auto weight_threshold =
-      FLAGS_weight.empty() ? WeightClass::Zero(ifst->WeightType())
-                           : WeightClass(ifst->WeightType(), FLAGS_weight);
+      FLAGS_weight.empty()
+          ? WeightClass::Zero(ifst->WeightType())
+          : WeightClass(ifst->WeightType(), FLAGS_weight);
 
   VectorFstClass ofst(ifst->ArcType());
 
-  fst::QueueType queue_type;
+  QueueType queue_type;
   if (!s::GetQueueType(FLAGS_queue_type, &queue_type)) {
     LOG(ERROR) << "Unknown or unsupported queue type: " << FLAGS_queue_type;
     return 1;
   }
 
-  const s::ShortestPathOptions opts(queue_type, FLAGS_nshortest,
-                                    FLAGS_unique, FLAGS_delta,
-                                    weight_threshold, FLAGS_nstate);
+  const s::ShortestPathOptions opts(
+      queue_type, FLAGS_nshortest, FLAGS_unique,
+      FLAGS_delta, weight_threshold,
+      FLAGS_nstate);
 
   s::ShortestPath(*ifst, &ofst, opts);
 

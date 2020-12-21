@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -124,7 +138,7 @@ void DfsVisit(const FST &fst, Visitor *visitor, ArcFilter filter,
     while (!state_stack.empty()) {
       auto *dfs_state = state_stack.top();
       const auto s = dfs_state->state_id;
-      if (s >= static_cast<typename FST::Arc::StateId>(state_color.size())) {
+      if (s >= static_cast<decltype(s)>(state_color.size())) {
         nstates = s + 1;
         state_color.resize(nstates, kDfsWhite);
       }
@@ -144,7 +158,8 @@ void DfsVisit(const FST &fst, Visitor *visitor, ArcFilter filter,
         continue;
       }
       const auto &arc = aiter.Value();
-      if (arc.nextstate >= state_color.size()) {
+      if (arc.nextstate >=
+          static_cast<decltype(arc.nextstate)>(state_color.size())) {
         nstates = arc.nextstate + 1;
         state_color.resize(nstates, kDfsWhite);
       }

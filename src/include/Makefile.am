@@ -5,13 +5,14 @@ endif
 
 if HAVE_FAR
 far_include_headers = fst/extensions/far/compile-strings.h \
-fst/extensions/far/create.h fst/extensions/far/equal.h \
-fst/extensions/far/extract.h fst/extensions/far/far.h \
-fst/extensions/far/far-class.h fst/extensions/far/farlib.h \
-fst/extensions/far/farscript.h fst/extensions/far/getters.h \
-fst/extensions/far/info.h fst/extensions/far/isomorphic.h \
-fst/extensions/far/print-strings.h fst/extensions/far/script-impl.h \
-fst/extensions/far/stlist.h fst/extensions/far/sttable.h
+fst/extensions/far/convert.h fst/extensions/far/create.h \
+fst/extensions/far/equal.h fst/extensions/far/extract.h \
+fst/extensions/far/far.h fst/extensions/far/far-class.h \
+fst/extensions/far/farlib.h fst/extensions/far/farscript.h \
+fst/extensions/far/getters.h fst/extensions/far/info.h \
+fst/extensions/far/isomorphic.h fst/extensions/far/print-strings.h \
+fst/extensions/far/script-impl.h fst/extensions/far/stlist.h \
+fst/extensions/far/sttable.h
 endif
 
 if HAVE_LINEAR
@@ -102,7 +103,7 @@ fst/cache.h fst/closure.h fst/compact-fst.h fst/compat.h fst/complement.h \
 fst/compose-filter.h fst/compose.h fst/concat.h fst/config.h fst/connect.h \
 fst/const-fst.h fst/determinize.h fst/dfs-visit.h fst/difference.h \
 fst/disambiguate.h fst/edit-fst.h fst/encode.h fst/epsnormalize.h fst/equal.h \
-fst/equivalent.h fst/expanded-fst.h fst/expander-cache.h \
+fst/equivalent.h fst/error-weight.h fst/expanded-fst.h fst/expander-cache.h \
 fst/expectation-weight.h fst/factor-weight.h fst/filter-state.h fst/flags.h \
 fst/float-weight.h fst/fst-decl.h fst/fst.h fst/fstlib.h \
 fst/generic-register.h fst/heap.h fst/icu.h fst/intersect.h \
@@ -122,7 +123,7 @@ fst/state-table.h fst/statesort.h fst/string-weight.h fst/string.h \
 fst/symbol-table-ops.h fst/symbol-table.h fst/synchronize.h \
 fst/test-properties.h fst/topsort.h fst/tuple-weight.h fst/types.h \
 fst/union-find.h fst/union-weight.h fst/union.h fst/util.h fst/vector-fst.h \
-fst/verify.h fst/visit.h fst/weight.h \
+fst/verify.h fst/visit.h fst/windows_defs.inc fst/weight.h \
 $(compress_include_headers) \
 $(far_include_headers) \
 $(linear_include_headers) \

@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -18,7 +32,6 @@
 #include <fst/fst-decl.h>  // For optional argument declarations
 #include <fst/mutable-fst.h>
 #include <fst/test-properties.h>
-
 
 namespace fst {
 
@@ -93,7 +106,7 @@ class VectorState {
   }
 
   template <class... T>
-  void EmplaceArc(T&&... ctor_args) {
+  void EmplaceArc(T &&... ctor_args) {
     arcs_.emplace_back(std::forward<T>(ctor_args)...);
     IncrementNumEpsilons(arcs_.back());
   }
@@ -230,7 +243,7 @@ class VectorFstBaseImpl : public FstImpl<typename S::Arc> {
   }
 
   template <class... T>
-  void EmplaceArc(StateId state, T&&... ctor_args) {
+  void EmplaceArc(StateId state, T &&... ctor_args) {
     states_[state]->EmplaceArc(std::forward<T>(ctor_args)...);
   }
 
@@ -386,7 +399,7 @@ class VectorFstImpl : public VectorFstBaseImpl<S> {
   }
 
   template <class... T>
-  void EmplaceArc(StateId state, T&&... ctor_args) {
+  void EmplaceArc(StateId state, T &&... ctor_args) {
     BaseImpl::EmplaceArc(state, std::forward<T>(ctor_args)...);
     UpdatePropertiesAfterAddArc(state);
   }
@@ -420,9 +433,8 @@ class VectorFstImpl : public VectorFstBaseImpl<S> {
     const size_t num_arcs{vstate->NumArcs()};
     if (num_arcs) {
       const auto &arc = vstate->GetArc(num_arcs - 1);
-      const auto *parc = (num_arcs < 2)
-                         ? nullptr
-                         : &(vstate->GetArc(num_arcs - 2));
+      const auto *parc =
+          (num_arcs < 2) ? nullptr : &(vstate->GetArc(num_arcs - 2));
       SetProperties(AddArcProperties(Properties(), state, arc, parc));
     }
   }
@@ -462,7 +474,7 @@ VectorFstImpl<S>::VectorFstImpl(const Fst<Arc> &fst) {
 template <class S>
 VectorFstImpl<S> *VectorFstImpl<S>::Read(std::istream &strm,
                                          const FstReadOptions &opts) {
-  std::unique_ptr<VectorFstImpl> impl(new VectorFstImpl());
+  auto impl = fst::make_unique<VectorFstImpl>();
   FstHeader hdr;
   if (!impl->ReadHeader(strm, opts, kMinFileVersion, &hdr)) return nullptr;
   impl->BaseImpl::SetStart(hdr.Start());
@@ -550,7 +562,7 @@ class VectorFst : public ImplToMutableFst<internal::VectorFstImpl<S>> {
   }
 
   template <class... T>
-  void EmplaceArc(StateId state, T&&... ctor_args) {
+  void EmplaceArc(StateId state, T &&... ctor_args) {
     MutateCheck();
     GetMutableImpl()->EmplaceArc(state, std::forward<T>(ctor_args)...);
   }
@@ -803,7 +815,8 @@ class MutableArcIterator<VectorFst<Arc, State>>
 template <class Arc, class State>
 inline void VectorFst<Arc, State>::InitMutableArcIterator(
     StateId s, MutableArcIteratorData<Arc> *data) {
-  data->base = new MutableArcIterator<VectorFst<Arc, State>>(this, s);
+  data->base =
+      fst::make_unique<MutableArcIterator<VectorFst<Arc, State>>>(this, s);
 }
 
 // A useful alias when using StdArc.

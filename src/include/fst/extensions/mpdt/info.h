@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -6,12 +20,13 @@
 #ifndef FST_EXTENSIONS_MPDT_INFO_H_
 #define FST_EXTENSIONS_MPDT_INFO_H_
 
-#include <unordered_map>
 #include <vector>
 
 #include <fst/types.h>
 #include <fst/extensions/mpdt/mpdt.h>
 #include <fst/fst.h>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace fst {
 
@@ -124,23 +139,19 @@ MPdtInfo<Arc, nlevels>::MPdtInfo(
         const auto level = paren_levels[arc.ilabel];
         if (arc.ilabel == open_paren) {
           ++nopen_parens_[level];
-          if (!paren_set.count(open_paren)) {
+          if (paren_set.insert(open_paren).second) {
             ++nuniq_open_parens_[level];
-            paren_set.insert(open_paren);
           }
-          if (!open_paren_state_set.count(arc.nextstate)) {
+          if (open_paren_state_set.insert(arc.nextstate).second) {
             ++nopen_paren_states_[level];
-            open_paren_state_set.insert(arc.nextstate);
           }
         } else {
           ++nclose_parens_[level];
-          if (!paren_set.count(close_paren)) {
+          if (paren_set.insert(close_paren).second) {
             ++nuniq_close_parens_[level];
-            paren_set.insert(close_paren);
           }
-          if (!close_paren_state_set.count(s)) {
+          if (close_paren_state_set.insert(s).second) {
             ++nclose_paren_states_[level];
-            close_paren_state_set.insert(s);
           }
         }
       }

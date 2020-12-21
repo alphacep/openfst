@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -27,7 +41,8 @@ void MPdtCompose(const FstClass &ifst1, const FstClass &ifst2,
                  const std::vector<int64> &assignments, MutableFstClass *ofst,
                  const MPdtComposeOptions &copts, bool left_pdt) {
   if (!internal::ArcTypesMatch(ifst1, ifst2, "MPdtCompose") ||
-      !internal::ArcTypesMatch(ifst1, *ofst, "MPdtCompose")) return;
+      !internal::ArcTypesMatch(ifst1, *ofst, "MPdtCompose"))
+    return;
   MPdtComposeArgs args(ifst1, ifst2, parens, assignments, ofst, copts,
                        left_pdt);
   Apply<Operation<MPdtComposeArgs>>("MPdtCompose", ifst1.ArcType(), &args);

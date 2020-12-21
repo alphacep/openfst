@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -51,7 +65,14 @@ class LabelReachableData {
 
   int NumIntervalSets() const { return interval_sets_.size(); }
 
-  std::unordered_map<Label, Label> *Label2Index() {
+  std::unordered_map<Label, Label> *MutableLabel2Index() {
+    if (!have_relabel_data_) {
+      FSTERROR() << "LabelReachableData: No relabeling data";
+    }
+    return &label2index_;
+  }
+
+  const std::unordered_map<Label, Label> *Label2Index() const {
     if (!have_relabel_data_) {
       FSTERROR() << "LabelReachableData: No relabeling data";
     }
@@ -479,7 +500,7 @@ class LabelReachable {
     auto &interval_sets = *data_->MutableIntervalSets();
     interval_sets = state_reachable.IntervalSets();
     interval_sets.resize(ins);
-    auto &label2index = *data_->Label2Index();
+    auto &label2index = *data_->MutableLabel2Index();
     for (const auto &kv : label2state_) {
       Label i = state2index[kv.second];
       label2index[kv.first] = i;

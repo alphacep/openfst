@@ -1,7 +1,24 @@
+#cython: language_level=3
+# Copyright 2005-2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the 'License');
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an 'AS IS' BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 # See www.openfst.org for extensive documentation on this weighted
 # finite-state transducer library.
 
+
 from libcpp cimport bool
+from libcpp.memory cimport unique_ptr
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libcpp.utility cimport pair
@@ -127,9 +144,11 @@ cdef extern from "<fst/fstlib.h>" namespace "fst" nogil:
     EPS_NORM_INPUT
     EPS_NORM_OUTPUT
 
-  enum ProjectType:
-    PROJECT_INPUT
-    PROJECT_OUTPUT
+  # TODO(wolfsonkin): Don't do this hack if Cython gets proper enum class
+  # support: https://github.com/cython/cython/issues/1603
+  ctypedef enum ProjectType:
+    PROJECT_INPUT "fst::ProjectType::INPUT"
+    PROJECT_OUTPUT "fst::ProjectType::OUTPUT"
 
   enum QueueType:
     TRIVIAL_QUEUE
@@ -256,6 +275,13 @@ cdef extern from "<fst/fstlib.h>" namespace "fst" nogil:
                                 bool *)
 
   SymbolTable *FstReadSymbols(const string &, bool)
+
+  # TODO(wolfsonkin): Don't do this hack if Cython gets proper enum class
+  # support: https://github.com/cython/cython/issues/1603.
+  ctypedef enum TokenType:
+    SYMBOL "fst::TokenType::SYMBOL"
+    BYTE "fst::TokenType::BYTE"
+    UTF8 "fst::TokenType::UTF8"
 
 
 cdef extern from "<fst/script/fstscript.h>" namespace "fst::script" nogil:
@@ -486,15 +512,19 @@ ctypedef pair[int64, int64] LabelPair
 
 cdef extern from "<fst/script/fstscript.h>" namespace "fst::script" nogil:
 
-  enum ArcFilterType:
-    ANY_ARC_FILTER
-    EPSILON_ARC_FILTER
-    INPUT_EPSILON_ARC_FILTER
-    OUTPUT_EPSILON_ARC_FILTER
+  # TODO(wolfsonkin): Don't do this hack if Cython gets proper enum class
+  # support: https://github.com/cython/cython/issues/1603
+  ctypedef enum ArcFilterType:
+    ANY_ARC_FILTER "fst::script::ArcFilterType::ANY"
+    EPSILON_ARC_FILTER "fst::script::ArcFilterType::EPSILON"
+    INPUT_EPSILON_ARC_FILTER "fst::script::ArcFilterType::INPUT_EPSILON"
+    OUTPUT_EPSILON_ARC_FILTER "fst::script::ArcFilterType::OUTPUT_EPSILON"
 
-  enum ArcSortType:
-    ILABEL_SORT
-    OLABEL_SORT
+  # TODO(wolfsonkin): Don't do this hack if Cython gets proper enum class
+  # support: https://github.com/cython/cython/issues/1603
+  ctypedef enum ArcSortType:
+    ILABEL_SORT "fst::script::ArcSortType::ILABEL"
+    OLABEL_SORT "fst::script::ArcSortType::OLABEL"
 
   cdef void ArcSort(MutableFstClass *, ArcSortType)
 
@@ -502,18 +532,18 @@ cdef extern from "<fst/script/fstscript.h>" namespace "fst::script" nogil:
 
   cdef void Closure(MutableFstClass *, ClosureType)
 
-  cdef FstClass *CompileFstInternal(istream &,
-                                    const string &,
-                                    const string &,
-                                    const string &,
-                                    const SymbolTable *,
-                                    const SymbolTable *,
-                                    const SymbolTable*,
-                                    bool,
-                                    bool,
-                                    bool,
-                                    bool,
-                                    bool)
+  cdef unique_ptr[FstClass] CompileFstInternal(istream &,
+                                               const string &,
+                                               const string &,
+                                               const string &,
+                                               const SymbolTable *,
+                                               const SymbolTable *,
+                                               const SymbolTable*,
+                                               bool,
+                                               bool,
+                                               bool,
+                                               bool,
+                                               bool)
 
   cdef void Compose(FstClass &, FstClass &, MutableFstClass *,
                     const ComposeOptions &)
@@ -522,7 +552,7 @@ cdef extern from "<fst/script/fstscript.h>" namespace "fst::script" nogil:
 
   cdef void Connect(MutableFstClass *)
 
-  cdef FstClass *Convert(const FstClass &, const string &)
+  cdef unique_ptr[FstClass] Convert(const FstClass &, const string &)
 
   cdef void Decode(MutableFstClass *, const EncodeMapperClass &)
 
@@ -590,30 +620,32 @@ cdef extern from "<fst/script/fstscript.h>" namespace "fst::script" nogil:
 
   cdef bool Isomorphic(const FstClass &, const FstClass &, float)
 
-  enum MapType:
-    ARC_SUM_MAPPER
-    IDENTITY_MAPPER
-    INPUT_EPSILON_MAPPER
-    INVERT_MAPPER
-    OUTPUT_EPSILON_MAPPER
-    PLUS_MAPPER
-    QUANTIZE_MAPPER
-    RMWEIGHT_MAPPER
-    SUPERFINAL_MAPPER
-    TIMES_MAPPER
-    TO_LOG_MAPPER
-    TO_LOG64_MAPPER
-    TO_STD_MAPPER
+  # TODO(wolfsonkin): Don't do this hack if Cython gets proper enum class
+  # support: https://github.com/cython/cython/issues/1603
+  ctypedef enum MapType:
+    ARC_SUM_MAPPER "fst::script::MapType::ARC_SUM"
+    IDENTITY_MAPPER "fst::script::MapType::IDENTITY"
+    INPUT_EPSILON_MAPPER "fst::script::MapType::INPUT_EPSILON"
+    INVERT_MAPPER "fst::script::MapType::INVERT"
+    OUTPUT_EPSILON_MAPPER "fst::script::MapType::OUTPUT_EPSILON"
+    PLUS_MAPPER "fst::script::MapType::PLUS"
+    QUANTIZE_MAPPER "fst::script::MapType::QUANTIZE"
+    RMWEIGHT_MAPPER "fst::script::MapType::RMWEIGHT"
+    SUPERFINAL_MAPPER "fst::script::MapType::SUPERFINAL"
+    TIMES_MAPPER "fst::script::MapType::TIMES"
+    TO_LOG_MAPPER "fst::script::MapType::TO_LOG"
+    TO_LOG64_MAPPER "fst::script::MapType::TO_LOG64"
+    TO_STD_MAPPER "fst::script::MapType::TO_STD"
 
-  cdef FstClass *Map(const FstClass &,
-                     MapType,
-                     float,
-                     double,
-                     const WeightClass &)
+  cdef unique_ptr[FstClass] Map(const FstClass &,
+                                MapType,
+                                float,
+                                double,
+                                const WeightClass &)
 
   cdef void Minimize(MutableFstClass *, MutableFstClass *, float, bool)
 
-  cdef ProjectType GetProjectType(bool)
+  cdef bool GetProjectType(const string &, ProjectType *)
 
   cdef void Project(MutableFstClass *, ProjectType)
 
@@ -641,10 +673,12 @@ cdef extern from "<fst/script/fstscript.h>" namespace "fst::script" nogil:
 
   cdef void Push(MutableFstClass *, ReweightType, float, bool)
 
-  enum RandArcSelection:
-    UNIFORM_ARC_SELECTOR
-    LOG_PROB_ARC_SELECTOR
-    FAST_LOG_PROB_ARC_SELECTOR
+  # TODO(wolfsonkin): Don't do this hack if Cython gets proper enum class
+  # support: https://github.com/cython/cython/issues/1603
+  ctypedef enum RandArcSelection:
+    UNIFORM_ARC_SELECTOR "fst::script::RandArcSelection::UNIFORM"
+    LOG_PROB_ARC_SELECTOR "fst::script::RandArcSelection::LOG_PROB"
+    FAST_LOG_PROB_ARC_SELECTOR "fst::script::RandArcSelection::FAST_LOG_PROB"
 
   cdef bool RandEquivalent(const FstClass &,
                            const FstClass &,
@@ -747,15 +781,19 @@ cdef extern from "<fst/script/getters.h>" namespace "fst::script" nogil:
 
   cdef ReweightType GetReweightType(bool)
 
+  cdef bool GetTokenType(const string &, TokenType *)
+
 
 cdef extern from "<fst/extensions/far/far.h>" namespace "fst" nogil:
 
-  enum FarType:
-    FAR_DEFAULT
-    FAR_STTABLE
-    FAR_STLIST
-    FAR_FST
-    FAR_SSTABLE
+  # TODO(wolfsonkin): Don't do this hack if Cython gets proper enum class
+  # support: https://github.com/cython/cython/issues/1603
+  ctypedef enum FarType:
+    FAR_DEFAULT "fst::FarType::DEFAULT"
+    FAR_STTABLE "fst::FarType::STTABLE"
+    FAR_STLIST "fst::FarType::STLIST"
+    FAR_FST "fst::FarType::FST"
+    FAR_SSTABLE "fst::FarType::SSTABLE"
 
 cdef extern from "<fst/extensions/far/getters.h>" \
     namespace "fst" nogil:
@@ -766,7 +804,7 @@ cdef extern from "<fst/extensions/far/getters.h>" \
 cdef extern from "<fst/extensions/far/getters.h>" \
     namespace "fst::script" nogil:
 
-  FarType GetFarType(const string &)
+  bool GetFarType(const string &, FarType *)
 
 
 cdef extern from "<fst/extensions/far/far-class.h>" \
@@ -794,7 +832,7 @@ cdef extern from "<fst/extensions/far/far-class.h>" \
 
     # For simplicity, we always use the multiple-file one.
     @staticmethod
-    FarReaderClass *Open(const vector[string] &)
+    unique_ptr[FarReaderClass] Open(const vector[string] &)
 
   cdef cppclass FarWriterClass:
 
@@ -807,4 +845,4 @@ cdef extern from "<fst/extensions/far/far-class.h>" \
     FarType Type()
 
     @staticmethod
-    FarWriterClass *Create(const string &, const string &, FarType)
+    unique_ptr[FarWriterClass] Create(const string &, const string &, FarType)

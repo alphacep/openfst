@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -17,6 +31,7 @@
 
 #include <fst/cache.h>
 #include <fst/mutable-fst.h>
+#include <unordered_map>
 
 
 namespace fst {
@@ -85,12 +100,12 @@ enum MapSymbolsAction {
 // whether the mapping mutates its input, writes to a new result FST, or is an
 // on-the-fly FST. Another dimension is how we pass the mapper. We allow passing
 // the mapper by pointer for cases that we need to change the state of the
-// user's mapper.  This is the case with the EncodeMapper, which is reused
+// user's mapper. This is the case with the EncodeMapper, which is reused
 // during decoding. We also include map versions that pass the mapper by value
 // or const reference when this suffices.
 
 // Maps an arc type A using a mapper function object C, passed
-// by pointer.  This version modifies its Fst input.
+// by pointer. This version modifies its Fst input.
 template <class A, class C>
 void ArcMap(MutableFst<A> *fst, C *mapper) {
   using FromArc = A;
@@ -199,8 +214,8 @@ void ArcMap(const Fst<A> &ifst, MutableFst<B> *ofst, C *mapper) {
   }
   const auto final_action = mapper->FinalAction();
   if (ifst.Properties(kExpanded, false)) {
-    ofst->ReserveStates(
-        CountStates(ifst) + (final_action == MAP_NO_SUPERFINAL ? 0 : 1));
+    ofst->ReserveStates(CountStates(ifst) +
+                        (final_action == MAP_NO_SUPERFINAL ? 0 : 1));
   }
   // Adds all states.
   for (StateIterator<Fst<A>> siter(ifst); !siter.Done(); siter.Next()) {
@@ -526,19 +541,13 @@ class ArcMapFst : public ImplToFst<internal::ArcMapFstImpl<A, B, C>> {
   friend class ArcIterator<ArcMapFst<A, B, C>>;
   friend class StateIterator<ArcMapFst<A, B, C>>;
 
-  ArcMapFst(const Fst<A> &fst, const C &mapper, const ArcMapFstOptions &opts)
+  ArcMapFst(const Fst<A> &fst, const C &mapper,
+            const ArcMapFstOptions &opts = ArcMapFstOptions())
       : ImplToFst<Impl>(std::make_shared<Impl>(fst, mapper, opts)) {}
 
-  ArcMapFst(const Fst<A> &fst, C *mapper, const ArcMapFstOptions &opts)
+  ArcMapFst(const Fst<A> &fst, C *mapper,
+            const ArcMapFstOptions &opts = ArcMapFstOptions())
       : ImplToFst<Impl>(std::make_shared<Impl>(fst, mapper, opts)) {}
-
-  ArcMapFst(const Fst<A> &fst, const C &mapper)
-      : ImplToFst<Impl>(
-            std::make_shared<Impl>(fst, mapper, ArcMapFstOptions())) {}
-
-  ArcMapFst(const Fst<A> &fst, C *mapper)
-      : ImplToFst<Impl>(
-            std::make_shared<Impl>(fst, mapper, ArcMapFstOptions())) {}
 
   // See Fst<>::Copy() for doc.
   ArcMapFst(const ArcMapFst &fst, bool safe = false)
@@ -632,10 +641,10 @@ class ArcIterator<ArcMapFst<A, B, C>>
 template <class A, class B, class C>
 inline void ArcMapFst<A, B, C>::InitStateIterator(
     StateIteratorData<B> *data) const {
-  data->base = new StateIterator<ArcMapFst<A, B, C>>(*this);
+  data->base = fst::make_unique<StateIterator<ArcMapFst<A, B, C>>>(*this);
 }
 
-// Constructs and returns an ArcMapFst.  This allows constructing ArcMapFsts
+// Constructs and returns an ArcMapFst. This allows constructing ArcMapFsts
 // without specifying all the types. The template argument is typically
 // not specified, so a call looks like: MakeArcMapFst(fst, Mapper(...)).
 template <class ArcMapper>
@@ -646,7 +655,7 @@ MakeArcMapFst(const Fst<typename ArcMapper::FromArc> &fst,
                    ArcMapper>(fst, mapper);
 }
 
-// Constructs and returns an ArcMapFst.  As above, but using the
+// Constructs and returns an ArcMapFst. As above, but using the
 // ArcMapFst(..., ArcMapper *) constructor.
 template <class ArcMapper>
 ArcMapFst<typename ArcMapper::FromArc, typename ArcMapper::ToArc, ArcMapper>
@@ -739,7 +748,7 @@ class SuperFinalMapper {
   using FromArc = A;
   using ToArc = A;
   using Label = typename FromArc::Label;
-  using Weight = typename FromArc::Weight;;
+  using Weight = typename FromArc::Weight;
 
   // Arg allows setting super-final label.
   constexpr explicit SuperFinalMapper(Label final_label = 0)
@@ -770,8 +779,8 @@ class SuperFinalMapper {
     if (final_label_ == 0) {
       return props & kAddSuperFinalProperties;
     } else {
-      return props & kAddSuperFinalProperties &
-          kILabelInvariantProperties & kOLabelInvariantProperties;
+      return props & kAddSuperFinalProperties & kILabelInvariantProperties &
+             kOLabelInvariantProperties;
     }
   }
 
@@ -849,14 +858,14 @@ class ToGallicMapper {
     // Super-final arc.
     if (arc.nextstate == kNoStateId && arc.weight != AW::Zero()) {
       return ToArc(0, 0, GW(SW::One(), arc.weight), kNoStateId);
-    // Super-non-final arc.
+      // Super-non-final arc.
     } else if (arc.nextstate == kNoStateId) {
       return ToArc(0, 0, GW::Zero(), kNoStateId);
-    // Epsilon label.
+      // Epsilon label.
     } else if (arc.olabel == 0) {
       return ToArc(arc.ilabel, arc.ilabel, GW(SW::One(), arc.weight),
                    arc.nextstate);
-    // Regular label.
+      // Regular label.
     } else {
       return ToArc(arc.ilabel, arc.ilabel, GW(SW(arc.olabel), arc.weight),
                    arc.nextstate);
@@ -1214,10 +1223,10 @@ class RmWeightMapper {
   using ToWeight = typename ToArc::Weight;
 
   ToArc operator()(const FromArc &arc) const {
-    return ToArc(arc.ilabel, arc.olabel,
-                 arc.weight != FromWeight::Zero() ?
-                 ToWeight::One() : ToWeight::Zero(),
-                 arc.nextstate);
+    return ToArc(
+        arc.ilabel, arc.olabel,
+        arc.weight != FromWeight::Zero() ? ToWeight::One() : ToWeight::Zero(),
+        arc.nextstate);
   }
 
   constexpr MapFinalAction FinalAction() const { return MAP_NO_SUPERFINAL; }

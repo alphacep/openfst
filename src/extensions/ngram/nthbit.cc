@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 
@@ -11,7 +25,7 @@ namespace fst {
 #if SIZE_MAX == UINT32_MAX
 
 // 32-bit platforms will be slow when using 64-bit operations; use this
-// table-based version instead.  This only contains constant shifts, which
+// table-based version instead. This only contains constant shifts, which
 // have been benchmarked to be fast.
 
 // These tables were generated using:
@@ -218,8 +232,10 @@ static const uint8 nth_bit_bit_pos[8][256] = {
     }};
 
 uint32 nth_bit(const uint64 v, uint32 r) {
-  // nth_bit uses 1-origin for r, but code below is more natural with 0-origin.
-  r--;
+  DCHECK_NE(v, 0);
+  DCHECK_LE(0, r);
+  DCHECK_LT(r, __builtin_popcountll(v));
+
   uint32 next_byte = v & 255;
   uint32 byte_popcount = nth_bit_bit_count[next_byte];
   if (r < byte_popcount) return nth_bit_bit_pos[r][next_byte];
@@ -258,9 +274,9 @@ uint32 nth_bit(const uint64 v, uint32 r) {
 // These tables are generated using:
 //
 //  constexpr uint64 kOnesStep8 = 0x0101010101010101;
-//  printf("const uint64 kPrefixSumOverflow[65] = {\n");
-//  for (int k = 0; k <= 64; ++k) {
-//    printf("  0x%" FST_LL_FORMAT "x,\n",  (0x80 - k) * kOnesStep8);
+//  printf("const uint64 kPrefixSumOverflow[64] = {\n");
+//  for (int k = 0; k < 64; ++k) {
+//    printf("  0x%" FST_LL_FORMAT "x,\n",  (0x7F - k) * kOnesStep8);
 //  }
 //  printf("};\n");
 //
@@ -279,8 +295,7 @@ uint32 nth_bit(const uint64 v, uint32 r) {
 namespace internal {
 
 // clang-format off
-const uint64 kPrefixSumOverflow[65] = {
-  0x8080808080808080,
+const uint64 kPrefixSumOverflow[64] = {
   0x7f7f7f7f7f7f7f7f,
   0x7e7e7e7e7e7e7e7e,
   0x7d7d7d7d7d7d7d7d,
@@ -487,7 +502,7 @@ const uint8 kSelectInByte[8 * 256] = {
 // clang-format on
 
 }  // namespace internal
-#endif  // 64-bit, non-BMI2
-#endif  // !defined(__BMI2__)
+#endif                        // 64-bit, non-BMI2
+#endif                        // !defined(__BMI2__)
 
 }  // namespace fst

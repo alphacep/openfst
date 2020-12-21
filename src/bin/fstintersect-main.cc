@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -18,6 +32,7 @@ DECLARE_bool(connect);
 int fstintersect_main(int argc, char **argv) {
   namespace s = fst::script;
   using fst::ComposeFilter;
+  using fst::IntersectOptions;
   using fst::script::FstClass;
   using fst::script::VectorFstClass;
 
@@ -57,7 +72,7 @@ int fstintersect_main(int argc, char **argv) {
     return 1;
   }
 
-  const fst::IntersectOptions opts(FLAGS_connect, compose_filter);
+  const IntersectOptions opts(FLAGS_connect, compose_filter);
 
   s::Intersect(*ifst1, *ifst2, &ofst, opts);
 

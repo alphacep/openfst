@@ -1,11 +1,11 @@
-AC_INIT([OpenFst], [1.7.7], [help@www.openfst.org])
+AC_INIT([OpenFst], [1.8.0], [help@www.openfst.org])
 AM_INIT_AUTOMAKE([foreign nostdinc -Wall -Werror subdir-objects])
 AM_PROG_AR
 
 AC_PROG_CXX
 # This library does not throw exceptions, so we do not generate exception
 # handling code. However, users are free to re-enable exception handling.
-CXX="$CXX -std=c++11 -fno-exceptions"
+CXX="$CXX -std=c++17 -fno-exceptions -Wno-deprecated-declarations"
 
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
@@ -105,8 +105,8 @@ AC_ARG_ENABLE([python],
               [enable_python=no])
 AM_CONDITIONAL([HAVE_PYTHON], [test "x$enable_python" != xno])
 if test "x$enable_python" != xno; then
-  AM_PATH_PYTHON(2.7)
-  AC_PYTHON_DEVEL([>= '2.7'])
+  AM_PATH_PYTHON(3.6)
+  AC_PYTHON_DEVEL([>= '3.6'])
 fi
 
 AC_ARG_ENABLE([special],

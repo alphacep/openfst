@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 
@@ -698,17 +712,15 @@ bool FeatureGroupBuilder<A>::AddWeight(const std::vector<Label> &input,
     LOG(WARNING) << "\tOutput: " << JoinLabels(output, fsyms_);
     return false;
   }
-  if (num_input_start > 0 &&
-      input.size() - future_size_ - num_input_start <
-          output.size() - num_output_start) {
+  if (num_input_start > 0 && input.size() - future_size_ - num_input_start <
+                                 output.size() - num_output_start) {
     LOG(WARNING) << "Ignored: matching start-of-sentence with actual output!";
     LOG(WARNING) << "\tInput: " << JoinLabels(input, fsyms_);
     LOG(WARNING) << "\tOutput: " << JoinLabels(output, osyms_);
     return false;
   }
-  if (num_output_start > 0 &&
-      input.size() - future_size_ - num_input_start >
-          output.size() - num_output_start) {
+  if (num_output_start > 0 && input.size() - future_size_ - num_input_start >
+                                  output.size() - num_output_start) {
     LOG(WARNING) << "Ignored: matching start-of-sentence with actual input!";
     LOG(WARNING) << "\tInput: " << JoinLabels(input, fsyms_);
     LOG(WARNING) << "\tOutput: " << JoinLabels(output, osyms_);

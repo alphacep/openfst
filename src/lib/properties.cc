@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -32,10 +46,11 @@ uint64 ClosureProperties(uint64 inprops, bool, bool delayed) {
   if (!delayed || inprops & kAccessible) {
     outprops |= (kNotAcceptor | kNonIDeterministic | kNonODeterministic |
                  kNotILabelSorted | kNotOLabelSorted | kWeighted |
-                 kWeightedCycles | kNotAccessible | kNotCoAccessible) & inprops;
+                 kWeightedCycles | kNotAccessible | kNotCoAccessible) &
+                inprops;
     if ((inprops & kWeighted) && (inprops & kAccessible) &&
         (inprops & kCoAccessible)) {
-        outprops |= kWeightedCycles;
+      outprops |= kWeightedCycles;
     }
   }
   return outprops;
@@ -180,10 +195,10 @@ uint64 InvertProperties(uint64 inprops) {
 uint64 ProjectProperties(uint64 inprops, bool project_input) {
   auto outprops = kAcceptor;
   outprops |= (kExpanded | kMutable | kError | kWeighted | kUnweighted |
-               kWeightedCycles | kUnweightedCycles |
-               kCyclic | kAcyclic | kInitialCyclic | kInitialAcyclic |
-               kTopSorted | kNotTopSorted | kAccessible | kNotAccessible |
-               kCoAccessible | kNotCoAccessible | kString | kNotString) &
+               kWeightedCycles | kUnweightedCycles | kCyclic | kAcyclic |
+               kInitialCyclic | kInitialAcyclic | kTopSorted | kNotTopSorted |
+               kAccessible | kNotAccessible | kCoAccessible | kNotCoAccessible |
+               kString | kNotString) &
               inprops;
   if (project_input) {
     outprops |= (kIDeterministic | kNonIDeterministic | kIEpsilons |
@@ -255,7 +270,8 @@ uint64 ReplaceProperties(const std::vector<uint64>& inprops, size_t root,
       if (replace_transducer) props |= kNotAcceptor & inprop;
       props |= (kNonIDeterministic | kNonODeterministic | kEpsilons |
                 kIEpsilons | kOEpsilons | kWeighted | kWeightedCycles |
-                kCyclic | kNotTopSorted | kNotString) & inprop;
+                kCyclic | kNotTopSorted | kNotString) &
+               inprop;
       if (!(inprop & kString)) string = false;
     }
     outprops |= props;
@@ -328,9 +344,13 @@ uint64 ReverseProperties(uint64 inprops, bool has_superinitial) {
 }
 
 // Properties for re-weighted FST.
-uint64 ReweightProperties(uint64 inprops) {
+uint64 ReweightProperties(uint64 inprops, bool added_start_epsilon) {
   auto outprops = inprops & kWeightInvariantProperties;
   outprops = outprops & ~kCoAccessible;
+  if (added_start_epsilon) {
+    outprops &= ~(kNoEpsilons | kNoIEpsilons | kNoOEpsilons | kInitialCyclic);
+    outprops |= kEpsilons | kIEpsilons | kOEpsilons | kInitialAcyclic;
+  }
   return outprops;
 }
 
@@ -363,8 +383,8 @@ uint64 SynchronizeProperties(uint64 inprops) {
                    kUnweighted | kUnweightedCycles) &
                   inprops;
   if (inprops & kAccessible) {
-    outprops |= (kCyclic | kNotCoAccessible | kWeighted | kWeightedCycles) &
-        inprops;
+    outprops |=
+        (kCyclic | kNotCoAccessible | kWeighted | kWeightedCycles) & inprops;
   }
   return outprops;
 }

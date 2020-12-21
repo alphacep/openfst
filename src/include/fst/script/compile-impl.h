@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -36,18 +50,18 @@ class FstCompiler {
   // symbol tables. This is only useful if you set the (i/o)keep flag to attach
   // the final symbol table, or use the accessors. (The input symbol tables are
   // const and therefore not changed.)
-  FstCompiler(std::istream &istrm, const std::string &source,  // NOLINT
+  FstCompiler(std::istream &istrm, const std::string &source,
               const SymbolTable *isyms, const SymbolTable *osyms,
               const SymbolTable *ssyms, bool accep, bool ikeep, bool okeep,
               bool nkeep, bool allow_negative_labels = false) {
     std::unique_ptr<SymbolTable> misyms(isyms ? isyms->Copy() : nullptr);
     std::unique_ptr<SymbolTable> mosyms(osyms ? osyms->Copy() : nullptr);
     std::unique_ptr<SymbolTable> mssyms(ssyms ? ssyms->Copy() : nullptr);
-    Init(istrm, source, misyms.get(), mosyms.get(), mssyms.get(), accep,
-         ikeep, okeep, nkeep, allow_negative_labels, false);
+    Init(istrm, source, misyms.get(), mosyms.get(), mssyms.get(), accep, ikeep,
+         okeep, nkeep, allow_negative_labels, false);
   }
 
-  FstCompiler(std::istream &istrm, const std::string &source,  // NOLINT
+  FstCompiler(std::istream &istrm, const std::string &source,
               SymbolTable *isyms, SymbolTable *osyms, SymbolTable *ssyms,
               bool accep, bool ikeep, bool okeep, bool nkeep,
               bool allow_negative_labels, bool add_symbols) {
@@ -55,10 +69,10 @@ class FstCompiler {
          allow_negative_labels, add_symbols);
   }
 
-  void Init(std::istream &istrm, const std::string &source,  // NOLINT
-            SymbolTable *isyms, SymbolTable *osyms, SymbolTable *ssyms,
-            bool accep, bool ikeep, bool okeep, bool nkeep,
-            bool allow_negative_labels, bool add_symbols) {
+  void Init(std::istream &istrm, const std::string &source, SymbolTable *isyms,
+            SymbolTable *osyms, SymbolTable *ssyms, bool accep, bool ikeep,
+            bool okeep, bool nkeep, bool allow_negative_labels,
+            bool add_symbols) {
     nline_ = 0;
     source_ = source;
     isyms_ = isyms;
@@ -75,8 +89,7 @@ class FstCompiler {
       ++nline_;
       std::vector<char *> col;
       SplitString(line, separator.c_str(), &col, true);
-      if (col.empty() || col[0][0] == '\0')
-        continue;
+      if (col.empty() || col[0][0] == '\0') continue;
       if (col.size() > 5 || (col.size() > 4 && accep) ||
           (col.size() == 3 && !accep)) {
         FSTERROR() << "FstCompiler: Bad number of columns, source = " << source_
@@ -153,7 +166,7 @@ class FstCompiler {
     } else {
       char *p;
       n = strtoll(s, &p, 10);
-      if (p < s + strlen(s) || (!allow_negative && n < 0)) {
+      if (*p != '\0' || (!allow_negative && n < 0)) {
         FSTERROR() << "FstCompiler: Bad " << name << " integer = \"" << s
                    << "\", source = " << source_ << ", line = " << nline_;
         fst_.SetProperties(kError, kError);
@@ -203,7 +216,7 @@ class FstCompiler {
   SymbolTable *osyms_;  // olabel symbol table (not owned).
   SymbolTable *ssyms_;  // slabel symbol table (not owned).
   std::unordered_map<StateId, StateId> states_;  // State ID map.
-  StateId nstates_;                              // Number of seen states.
+  StateId nstates_;                               // Number of seen states.
   bool keep_state_numbering_;
   bool allow_negative_labels_;  // Not recommended; may cause conflicts.
   bool add_symbols_;            // Add to symbol tables on-the fly.

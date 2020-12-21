@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -299,12 +313,12 @@ constexpr uint64 kTrinaryProperties = 0x0000ffffffff0000ULL;
 // COMPUTED PROPERTIES
 
 // 1st bit of trinary properties.
-constexpr uint64 kPosTrinaryProperties = kTrinaryProperties &
-    0x5555555555555555ULL;
+constexpr uint64 kPosTrinaryProperties =
+    kTrinaryProperties & 0x5555555555555555ULL;
 
 // 2nd bit of trinary properties.
-constexpr uint64 kNegTrinaryProperties = kTrinaryProperties &
-    0xaaaaaaaaaaaaaaaaULL;
+constexpr uint64 kNegTrinaryProperties =
+    kTrinaryProperties & 0xaaaaaaaaaaaaaaaaULL;
 
 // All properties.
 constexpr uint64 kFstProperties = kBinaryProperties | kTrinaryProperties;
@@ -361,7 +375,7 @@ uint64 ReplaceProperties(const std::vector<uint64> &inprops, size_t root,
 
 uint64 ReverseProperties(uint64 inprops, bool has_superinitial);
 
-uint64 ReweightProperties(uint64 inprops);
+uint64 ReweightProperties(uint64 inprops, bool added_start_epsilon);
 
 uint64 RmEpsilonProperties(uint64 inprops, bool delayed = false);
 
@@ -423,8 +437,8 @@ uint64 SetFinalProperties(uint64 inprops, const Weight &old_weight,
 /// \param prev_arc the previously-added (or "last") arc of state s, or nullptr
 //                  if s currently has no arcs.
 template <typename Arc>
-uint64 AddArcProperties(uint64 inprops, typename Arc::StateId s,
-                        const Arc &arc, const Arc *prev_arc) {
+uint64 AddArcProperties(uint64 inprops, typename Arc::StateId s, const Arc &arc,
+                        const Arc *prev_arc) {
   using Weight = typename Arc::Weight;
   auto outprops = inprops;
   if (arc.ilabel != arc.olabel) {

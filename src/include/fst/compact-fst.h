@@ -1,3 +1,17 @@
+// Copyright 2005-2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -35,19 +49,19 @@ struct CompactFstOptions : public CacheOptions {
   explicit CompactFstOptions(const CacheOptions &opts) : CacheOptions(opts) {}
 };
 
-// New (Fst) Compactor interface - used by CompactFst.  This interface
+// New (Fst) Compactor interface - used by CompactFst. This interface
 // allows complete flexibility in how the compaction is accomplished.
 //
 // class Compactor {
 //  public:
-//   // Constructor from the Fst to be compacted.  If compactor is present,
-//   // only optional state should be copied from it.  Examples of this
+//   // Constructor from the Fst to be compacted. If compactor is present,
+//   // only optional state should be copied from it. Examples of this
 //   // optional state include compression level or ArcCompactors.
 //   explicit Compactor(const Fst<Arc> &fst,
 //                      shared_ptr<Compactor> compactor = nullptr);
-//   // Copy constructor.  Must make a thread-safe copy suitable for use by
-//   // by Fst::Copy(/*safe=*/true).  Only thread-unsafe data structures
-//   // need to be deeply copied.  Ideally, this constructor is O(1) and any
+//   // Copy constructor. Must make a thread-safe copy suitable for use by
+//   // by Fst::Copy(/*safe=*/true). Only thread-unsafe data structures
+//   // need to be deeply copied. Ideally, this constructor is O(1) and any
 //   // large structures are thread-safe and shared, while small ones may
 //   // need to be copied.
 //   Compactor(const Compactor &compactor);
@@ -65,7 +79,7 @@ struct CompactFstOptions : public CacheOptions {
 //    public:
 //     State();  // Required, corresponds to kNoStateId.
 //     // This constructor may, of course, also take a const Compactor *
-//     // for the first argument.  It is recommended to use const Compactor *
+//     // for the first argument. It is recommended to use const Compactor *
 //     // if possible, but this can be Compactor * if necessary.
 //     State(Compactor *c, StateId s);  // Accessor for StateId 's'.
 //     StateId GetStateId() const;
@@ -137,8 +151,8 @@ struct CompactFstOptions : public CacheOptions {
 //   // Default constructor (optional, see comment below).
 //   ArcCompactor();
 //
-//   // Copy constructor.  Must make a thread-safe copy suitable for use by
-//   // by Fst::Copy(/*safe=*/true).  Only thread-unsafe data structures
+//   // Copy constructor. Must make a thread-safe copy suitable for use by
+//   // by Fst::Copy(/*safe=*/true). Only thread-unsafe data structures
 //   // need to be deeply copied.
 //   ArcCompactor(const ArcCompactor &);
 //
@@ -161,7 +175,7 @@ struct CompactFstOptions : public CacheOptions {
 //   bool Compatible(const Fst<A> &fst) const;
 //
 //   // Returns the properties that are always true for an FST compacted using
-//   // this compactor.  Any Fst with the inverse of these properties should
+//   // this compactor. Any Fst with the inverse of these properties should
 //   // be incompatible.
 //   uint64 Properties() const;
 //
@@ -185,7 +199,7 @@ struct CompactFstOptions : public CacheOptions {
 //   FSTERROR() << "Compactor: No default constructor";
 // }
 
-// Default implementation data for CompactArcCompactor.  Only old-style
+// Default implementation data for CompactArcCompactor. Only old-style
 // ArcCompactors are supported because the CompactArcStore constructors
 // use the old API.
 //
@@ -236,14 +250,14 @@ class CompactArcStore {
   bool Write(std::ostream &strm, const FstWriteOptions &opts) const;
 
   // Returns the starting index in 'compacts_' of the transitions
-  // for state 'i'.  See class-level comment for further details.
+  // for state 'i'. See class-level comment for further details.
   // Requires that the CompactArcStore was constructed with a
-  // variable out-degree compactor.  Requires 0 <= i <= NumStates().
+  // variable out-degree compactor. Requires 0 <= i <= NumStates().
   // By convention, States(NumStates()) == NumCompacts().
   Unsigned States(ssize_t i) const { return states_[i]; }
 
-  // Returns the compacted Element at position i.  See class-level comment
-  // for further details.  Requires 0 <= i < NumCompacts().
+  // Returns the compacted Element at position i. See class-level comment
+  // for further details. Requires 0 <= i < NumCompacts().
   const Element &Compacts(size_t i) const { return compacts_[i]; }
 
   size_t NumStates() const { return nstates_; }
@@ -266,7 +280,7 @@ class CompactArcStore {
   Unsigned *states_ = nullptr;
   // Unowned pointer into compacts_region_.
   Element *compacts_ = nullptr;
-  size_t nstates_  = 0;
+  size_t nstates_ = 0;
   size_t ncompacts_ = 0;
   size_t narcs_ = 0;
   ssize_t start_ = kNoStateId;
@@ -422,7 +436,7 @@ template <class ArcCompactor>
 CompactArcStore<Element, Unsigned> *CompactArcStore<Element, Unsigned>::Read(
     std::istream &strm, const FstReadOptions &opts, const FstHeader &hdr,
     const ArcCompactor &arc_compactor) {
-  std::unique_ptr<CompactArcStore> data(new CompactArcStore);
+  auto data = fst::make_unique<CompactArcStore>();
   data->start_ = hdr.Start();
   data->nstates_ = hdr.NumStates();
   data->narcs_ = hdr.NumArcs();
@@ -571,7 +585,7 @@ class CompactArcCompactor {
   CompactArcCompactor(const Iterator b, const Iterator e)
       : CompactArcCompactor(b, e, std::make_shared<ArcCompactor>()) {}
 
-  // Copy constructor.  This makes a thread-safe copy, so requires that
+  // Copy constructor. This makes a thread-safe copy, so requires that
   // The ArcCompactor and CompactStore copy constructors make thread-safe
   // copies.
   CompactArcCompactor(const CompactArcCompactor &compactor)
@@ -711,8 +725,8 @@ class CompactArcState {
     s_ = s;
     range_ = compactor->CompactsRange(s);
     if (range_.second != 0 &&
-        compactor->ComputeArc(s, range_.first, kArcILabelValue).ilabel
-        == kNoLabel) {
+        compactor->ComputeArc(s, range_.first, kArcILabelValue).ilabel ==
+            kNoLabel) {
       has_final_ = true;
       ++range_.first;
       --range_.second;
@@ -792,8 +806,8 @@ class CompactArcState<ArcCompactor, U,
     }
     if (num_arcs_ > 0) {
       compacts_ = &(store->Compacts(offset));
-      if (arc_compactor_->Expand(s_, *compacts_, kArcILabelValue).ilabel
-          == kNoStateId) {
+      if (arc_compactor_->Expand(s_, *compacts_, kArcILabelValue).ilabel ==
+          kNoStateId) {
         ++compacts_;
         --num_arcs_;
         has_final_ = true;
@@ -840,24 +854,24 @@ class CompactFstImpl
   using FstImpl<Arc>::WriteHeader;
 
   using ImplBase = CacheBaseImpl<typename CacheStore::State, CacheStore>;
-  using ImplBase::PushArc;
   using ImplBase::HasArcs;
   using ImplBase::HasFinal;
   using ImplBase::HasStart;
+  using ImplBase::PushArc;
   using ImplBase::SetArcs;
   using ImplBase::SetFinal;
   using ImplBase::SetStart;
 
   CompactFstImpl()
       : ImplBase(CompactFstOptions()),
-        compactor_() {
+        compactor_(std::make_shared<Compactor>()) {
     SetType(Compactor::Type());
     SetProperties(kNullProperties | kStaticProperties);
   }
 
   // Constructs a CompactFstImpl, creating a new Compactor using
   // Compactor(fst, compactor); this uses the compactor arg only for optional
-  // information, such as compression level.  See the Compactor interface
+  // information, such as compression level. See the Compactor interface
   // description.
   CompactFstImpl(const Fst<Arc> &fst, std::shared_ptr<Compactor> compactor,
                  const CompactFstOptions &opts)
@@ -867,11 +881,12 @@ class CompactFstImpl
     SetInputSymbols(fst.InputSymbols());
     SetOutputSymbols(fst.OutputSymbols());
     if (compactor_->Error()) SetProperties(kError, kError);
-    uint64 copy_properties = fst.Properties(kMutable, false) ?
-        fst.Properties(kCopyProperties, true):
-        CheckProperties(fst,
-                        kCopyProperties & ~kWeightedCycles & ~kUnweightedCycles,
-                        kCopyProperties);
+    uint64 copy_properties =
+        fst.Properties(kMutable, false)
+            ? fst.Properties(kCopyProperties, true)
+            : CheckProperties(
+                  fst, kCopyProperties & ~kWeightedCycles & ~kUnweightedCycles,
+                  kCopyProperties);
     if ((copy_properties & kError) || !compactor_->IsCompatible(fst)) {
       FSTERROR() << "CompactFstImpl: Input Fst incompatible with compactor";
       SetProperties(kError, kError);
@@ -892,9 +907,9 @@ class CompactFstImpl
   // does so as well.
   CompactFstImpl(const CompactFstImpl &impl)
       : ImplBase(impl),
-        compactor_(impl.compactor_ == nullptr ?
-                   std::make_shared<Compactor>() :
-                   std::make_shared<Compactor>(*impl.compactor_)) {
+        compactor_(impl.compactor_ == nullptr
+                       ? std::make_shared<Compactor>()
+                       : std::make_shared<Compactor>(*impl.compactor_)) {
     SetType(impl.Type());
     SetProperties(impl.Properties());
     SetInputSymbols(impl.InputSymbols());
@@ -967,7 +982,7 @@ class CompactFstImpl
   }
 
   static CompactFstImpl *Read(std::istream &strm, const FstReadOptions &opts) {
-    std::unique_ptr<CompactFstImpl> impl(new CompactFstImpl);
+    auto impl = fst::make_unique<CompactFstImpl>();
     FstHeader hdr;
     if (!impl->ReadHeader(strm, opts, kMinFileVersion, &hdr)) {
       return nullptr;
@@ -976,8 +991,8 @@ class CompactFstImpl
     if (hdr.Version() == kAlignedFileVersion) {
       hdr.SetFlags(hdr.GetFlags() | FstHeader::IS_ALIGNED);
     }
-    impl->compactor_ = std::shared_ptr<Compactor>(
-        Compactor::Read(strm, opts, hdr));
+    impl->compactor_ =
+        std::shared_ptr<Compactor>(Compactor::Read(strm, opts, hdr));
     if (!impl->compactor_) {
       return nullptr;
     }
@@ -1031,8 +1046,8 @@ class CompactFstImpl
  protected:
   template <class OtherArc, class OtherCompactor, class OtherCacheStore>
   explicit CompactFstImpl(
-    const CompactFstImpl<OtherArc, OtherCompactor, OtherCacheStore> &impl)
-    : compactor_(std::make_shared<Compactor>(*impl.GetCompactor())) {
+      const CompactFstImpl<OtherArc, OtherCompactor, OtherCacheStore> &impl)
+      : compactor_(std::make_shared<Compactor>(*impl.GetCompactor())) {
     SetType(impl.Type());
     SetProperties(impl.Properties());
     SetInputSymbols(impl.InputSymbols());
@@ -1112,18 +1127,18 @@ class CompactFst
 
   // Constructs a CompactFst, creating a new Compactor using
   // Compactor(fst, compactor); this uses the compactor arg only for optional
-  // information, such as compression level.  See the Compactor interface
+  // information, such as compression level. See the Compactor interface
   // description.
   CompactFst(const Fst<Arc> &fst, std::shared_ptr<Compactor> compactor,
              const CompactFstOptions &opts = CompactFstOptions())
       : ImplToExpandedFst<Impl>(
             std::make_shared<Impl>(fst, std::move(compactor), opts)) {}
 
-  // Convenience constructor taking a Compactor rvalue ref.  Avoids
+  // Convenience constructor taking a Compactor rvalue ref. Avoids
   // clutter of make_shared<Compactor> at call site.
   // Constructs a CompactFst, creating a new Compactor using
   // Compactor(fst, compactor); this uses the compactor arg only for optional
-  // information, such as compression level.  See the Compactor interface
+  // information, such as compression level. See the Compactor interface
   // description.
   CompactFst(const Fst<Arc> &fst, Compactor &&compactor,
              const CompactFstOptions &opts = CompactFstOptions())
@@ -1214,7 +1229,7 @@ bool WriteCompactArcFst(
   size_t num_states = -1;
   auto first_pass_arc_compactor = arc_compactor;
   // Note that GetCompactor will only return non-null if the compactor has the
-  // exact type Compactor == CompactArcFst::Compactor.  This is what we want;
+  // exact type Compactor == CompactArcFst::Compactor. This is what we want;
   // other types must do an extra pass to set the arc compactor state.
   if (const Compactor *const compactor =
           internal::GetCompactor<Compactor>(fst)) {
@@ -1605,7 +1620,7 @@ using StdCompactUnweightedAcceptorFst =
     CompactUnweightedAcceptorFst<StdArc, uint32>;
 
 // Convenience function to make a CompactStringFst from a sequence
-// of Arc::Labels.  LabelIterator must be an input iterator.
+// of Arc::Labels. LabelIterator must be an input iterator.
 template <class Arc, class Unsigned = uint32, class LabelIterator>
 inline CompactStringFst<Arc, Unsigned> MakeCompactStringFst(
     const LabelIterator begin, const LabelIterator end) {
