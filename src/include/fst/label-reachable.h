@@ -530,13 +530,38 @@ class LabelReachable {
     // binary search.
     aiter->SetFlags(reach_fst_input_ ? kArcILabelValue : kArcOLabelValue,
                     kArcValueFlags);
+
+    // Quick matching first
+    ssize_t first_low = aiter_begin;
+    aiter->Seek(first_low);
+    auto val = aiter->Value();
+    auto label =
+         reach_fst_input_ ? val.ilabel : val.olabel;
+    if (label >= match_label) {
+      aiter->SetFlags(kArcValueFlags, kArcValueFlags);
+      return first_low;
+    }
+
+    if (aiter_begin < aiter_end) {
+      ssize_t second_low = aiter_begin + 1;
+      aiter->Seek(second_low);
+      auto val = aiter->Value();
+      auto label =
+         reach_fst_input_ ? val.ilabel : val.olabel;
+      if (label >= match_label) {
+        aiter->SetFlags(kArcValueFlags, kArcValueFlags);
+        return second_low;
+      }
+    }
+
     ssize_t low = aiter_begin;
     ssize_t high = aiter_end;
     while (low < high) {
       const ssize_t mid = low + (high - low) / 2;
       aiter->Seek(mid);
-      auto label =
-          reach_fst_input_ ? aiter->Value().ilabel : aiter->Value().olabel;
+      auto val = aiter->Value();
+      label =
+          reach_fst_input_ ? val.ilabel : val.olabel;
       if (label < match_label) {
         low = mid + 1;
       } else {

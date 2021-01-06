@@ -963,7 +963,7 @@ class ArcIterator<NGramFst<A>> : public ArcIteratorBase<A> {
   typedef typename A::Weight Weight;
 
   ArcIterator(const NGramFst<A> &fst, StateId state)
-      : lazy_(~0), impl_(fst.GetImpl()), i_(0), flags_(kArcValueFlags) {
+      : impl_(fst.GetImpl()), i_(0), flags_(kArcValueFlags) {
     inst_ = fst.inst_;
     impl_->SetInstFuture(state, &inst_);
     impl_->SetInstNode(&inst_);
@@ -977,49 +977,41 @@ class ArcIterator<NGramFst<A>> : public ArcIteratorBase<A> {
   const Arc &Value() const final {
     bool eps = (inst_.node_ != 0 && i_ == 0);
     StateId state = (inst_.node_ == 0) ? i_ : i_ - 1;
-    if (flags_ & lazy_ & (kArcILabelValue | kArcOLabelValue)) {
+    if (flags_ & (kArcILabelValue | kArcOLabelValue)) {
       arc_.ilabel = arc_.olabel =
           eps ? 0 : impl_->future_words_[inst_.offset_ + state];
-      lazy_ &= ~(kArcILabelValue | kArcOLabelValue);
     }
-    if (flags_ & lazy_ & kArcNextStateValue) {
+    if (flags_ & kArcNextStateValue) {
       if (eps) {
         arc_.nextstate =
             impl_->context_index_.Rank1(impl_->context_index_.Select1(
                 impl_->context_index_.Rank0(inst_.node_) - 1));
       } else {
-        if (lazy_ & kArcNextStateValue) {
-          impl_->SetInstContext(&inst_);  // first time only.
-        }
+        impl_->SetInstContext(&inst_);
         arc_.nextstate = impl_->Transition(
             inst_.context_, impl_->future_words_[inst_.offset_ + state]);
       }
-      lazy_ &= ~kArcNextStateValue;
     }
-    if (flags_ & lazy_ & kArcWeightValue) {
+    if (flags_ & kArcWeightValue) {
       arc_.weight = eps ? impl_->backoff_[inst_.state_]
                         : impl_->future_probs_[inst_.offset_ + state];
-      lazy_ &= ~kArcWeightValue;
     }
     return arc_;
   }
 
   void Next() final {
     ++i_;
-    lazy_ = ~0;
   }
 
   size_t Position() const final { return i_; }
 
   void Reset() final {
     i_ = 0;
-    lazy_ = ~0;
   }
 
   void Seek(size_t a) final {
     if (i_ != a) {
       i_ = a;
-      lazy_ = ~0;
     }
   }
 
@@ -1032,7 +1024,6 @@ class ArcIterator<NGramFst<A>> : public ArcIteratorBase<A> {
 
  private:
   mutable Arc arc_;
-  mutable uint8 lazy_;
   const internal::NGramFstImpl<A> *impl_;  // Borrowed reference.
   mutable NGramFstInst<A> inst_;
 
