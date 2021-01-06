@@ -62,18 +62,14 @@ constexpr int64 kNoSymbol = -1;
 
 class SymbolTable;
 
-struct OPENFST_DEPRECATED(
-    "Reading via SymbolTableReadOptions is deprecated. Please directly provide "
-    "source string instead.") SymbolTableReadOptions {
+struct SymbolTableReadOptions {
   SymbolTableReadOptions() {}
 
   SymbolTableReadOptions(
-      OPENFST_DEPRECATED("Do not use `string_hash_ranges`; it is ignored.")
       std::vector<std::pair<int64, int64>> string_hash_ranges,
       const std::string &source)
       : string_hash_ranges(std::move(string_hash_ranges)), source(source) {}
 
-  OPENFST_DEPRECATED("Do not use `string_hash_ranges`; it is ignored.")
   std::vector<std::pair<int64, int64>> string_hash_ranges;
   std::string source;
 };
@@ -416,7 +412,6 @@ class SymbolTable {
       const std::string &source,
       const SymbolTableTextOptions &opts = SymbolTableTextOptions());
 
-  OPENFST_DEPRECATED("Use `Read(std::istream&, const std::string&)` instead.")
   static SymbolTable *Read(std::istream &strm,
                            const SymbolTableReadOptions &opts) {
     auto impl = fst::WrapUnique(internal::SymbolTableImpl::Read(strm, opts));
