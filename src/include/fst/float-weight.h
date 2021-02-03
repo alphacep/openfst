@@ -108,13 +108,6 @@ using FloatWeight = FloatWeightTpl<float>;
 template <class T>
 constexpr bool operator==(const FloatWeightTpl<T> &w1,
                           const FloatWeightTpl<T> &w2) {
-#if (defined(__i386__) || defined(__x86_64__)) && !defined(__SSE2_MATH__)
-// With i387 instructions, excess precision on a weight in an 80-bit
-// register may cause it to compare unequal to that same weight when
-// stored to memory. This breaks =='s reflexivity, in turn breaking
-// NaturalLess.
-#error "Please compile with -msse -mfpmath=sse, or equivalent."
-#endif
   return w1.Value() == w2.Value();
 }
 
